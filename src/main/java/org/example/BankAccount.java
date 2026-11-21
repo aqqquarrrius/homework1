@@ -1,12 +1,24 @@
 package org.example;
 
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+@ToString(onlyExplicitlyIncluded = true)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class BankAccount {
+    @Getter
+    @ToString.Include
+    @EqualsAndHashCode.Include
     private String accountNumber;
+    @Getter
+    @ToString.Include
     private BigDecimal balance = BigDecimal.ZERO;
+    @Getter
     private User owner;
     private List<Transaction> transactions = new ArrayList<>();
 
@@ -36,10 +48,6 @@ public class BankAccount {
         return true;
     }
 
-    public BigDecimal getBalance() {
-        return balance;
-    }
-
     public List<Transaction> getTransactions() {
         return List.copyOf(transactions);
     }
@@ -50,17 +58,9 @@ public class BankAccount {
         }
     }
 
-    public String getAccountNumber() {
-        return accountNumber;
-    }
-
-    public User getOwner() {
-        return owner;
-    }
-
-    public String toString() {
-        return "{accountNumber= " + accountNumber +
-            ", balance=" + balance +
-            "}";
+    public void removeTransaction(Transaction transaction) {
+        if (transaction != null) {
+            transactions.remove(transaction);
+        }
     }
 }

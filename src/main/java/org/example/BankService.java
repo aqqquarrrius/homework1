@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.UUID;
 
 public class BankService {
-    private List<BankAccount> accounts = new ArrayList<>();
+    final private List<BankAccount> accounts = new ArrayList<>();
 
     public BankAccount createAccount(User user, String accountNumber) {
         if (user == null) {
@@ -30,24 +30,37 @@ public class BankService {
 
     public boolean transfer(BankAccount source, BankAccount target, BigDecimal amount) {
         if(source == null || target == null || amount == null) return false;
+        if(source.equals(target)) return false;
         if(amount.signum() <= 0) return false;
-        if(source.getBalance().compareTo(amount) < 0) return false;
         if(!source.withdraw(amount)) return false;
         if(!target.deposit(amount)) {
             source.deposit(amount);
                 return false;
         }
-        Transaction transaction = new Transaction(
-            UUID.randomUUID().toString(),
-            amount,
-            "TRANSFER",
-            LocalDateTime.now(),
-            source,
-            target
-        );
-        source.addTransaction(transaction);
-        target.addTransaction(transaction);
-        return true;
+        Transaction transaction = null;
+        try {
+            transaction = Transaction.builder()
+                .id(UUID.randomUUID().toString())
+                .amount(amount)
+                .type(TransactionType.TRANSFER)
+                .date(LocalDateTime.now())
+                .sourceAccount(source)
+                .targetAccount(target)
+                .build();
+
+            source.addTransaction(transaction);
+            target.addTransaction(transaction);
+            return true;
+        } catch(IllegalArgumentException e) {
+            source.deposit(amount);
+            target.withdraw(amount);
+
+            if(transaction != null) {
+                source.removeTransaction(transaction);
+                target.removeTransaction(transaction);
+            }
+            return false;
+        }
     }
 
     public List<Transaction> getTransactionHistory(BankAccount bankAccount){
